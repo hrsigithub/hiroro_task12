@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-class TaxInfo: ObservableObject{
+class PriceInfo: ObservableObject{
 
     let keyTax = "tax"
 
@@ -23,11 +23,19 @@ class TaxInfo: ObservableObject{
 
     @Published var textPrice = ""
     @Published var taxIncludePrice: Int?
+
+    // 税込計算
+    func calcTaxIncludePrice() -> Int {
+        let price = Int(self.textPrice) ?? 0
+        let taxRate = Float(self.textTaxRate) ?? 0
+
+        return Int(Float(price) * (1.0 + taxRate / 100.0))
+    }
 }
 
 struct ContentView: View {
 
-    @ObservedObject var taxInfo = TaxInfo()
+    @ObservedObject var priceInfo = PriceInfo()
 
     var body: some View {
         VStack {
@@ -35,7 +43,7 @@ struct ContentView: View {
             HStack {
                 Spacer().frame(width: 10)
                 Text("税抜金額")
-                TextField("", text: $taxInfo.textPrice)
+                TextField("", text: $priceInfo.textPrice)
                     .keyboardType(.numberPad)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(width: 100)
@@ -46,10 +54,10 @@ struct ContentView: View {
             HStack {
                 Spacer().frame(width: 10)
                 Text("消費税率")
-                TextField("", text: $taxInfo.textTaxRate)
-                .keyboardType(.numberPad)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .frame(width: 100)
+                TextField("", text: $priceInfo.textTaxRate)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .frame(width: 100)
                 Text("％")
                 Spacer().frame(width: 10)
             }
@@ -57,15 +65,9 @@ struct ContentView: View {
             HStack {
                 Spacer().frame(width: 70)
                 Button("計算") {
-                    guard let price = Int(taxInfo.textPrice) else {
-                        return
-                    }
 
-                    guard let taxRate = Float(taxInfo.textTaxRate) else {
-                        return
-                    }
-
-                    taxInfo.taxIncludePrice = Int(Float(price) * (1.0 + taxRate / 100.0))
+                    // ここ、クラス内にまとめたいが。。計算ボタン押下しないで反映される。
+                    priceInfo.taxIncludePrice = priceInfo.calcTaxIncludePrice()
                 }
                 Spacer().frame(width: 30)
             }
@@ -73,7 +75,7 @@ struct ContentView: View {
 
             HStack {
                 Spacer().frame(width: 70)
-                Text("税込金額 \(String(taxInfo.taxIncludePrice ?? 0)) 円")
+                Text("税込金額 \(String(priceInfo.taxIncludePrice ?? 0)) 円")
                 Spacer().frame(width: 10)
             }
             Spacer()
